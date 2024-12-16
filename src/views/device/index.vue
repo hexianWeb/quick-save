@@ -1,40 +1,23 @@
 <template>
   <div class="page">
     <div class="container">
-      <!-- 顶部左侧 -->
+      <!-- banner 顶部状态部分 -->
       <div class="item left">
-        John
-        <div class="center">
-          <el-date-picker
-            v-model="value2"
-            type="date"
-            placeholder="Pick a Date"
-            format="yyyy-MM-dd"
-            value-format="timestamp"
-            @change="pickDate"
-          />
-          <div class="btn-date">
-            <div @click="leftDate">
-              <i class="el-icon-arrow-left" />
-            </div>
-            <div @click="rightDate">
-              <i class="el-icon-arrow-right" />
-            </div>
+        <div class="name-container">
+          <div class="name">
+            John Doe
           </div>
+          <StatusCapsule :status="1" />
         </div>
+
       </div>
-      <div class="item ">
-        <!-- <div class="flex-center">
-          <div> Certified: No</div>
-          <div>Worked hours: 07:28</div>
-          <div> Violations: No</div>
-        </div> -->
+      <div class="item">
         <div class="device">
           <div class="chart-container">
             <div ref="chart1" class="chart" />
             <div class="chart-title">
               <span style="color:#f2994a;">{{ showTime(1) }}</span>
-              <span>BREAK</span>
+              <small>BREAK</small>
             </div>
           </div>
           <div class="chart-container">
@@ -60,13 +43,53 @@
           </div>
         </div>
       </div>
-      <div class="item right">
+      <div class="item">
         <div class="flex-center1">
-          <button class="btn">Tracking</button>
-          <button class="btn">Report</button>
-          <button class="btn">Current Location</button>
+          <button class="main-button">Tracking</button>
+          <button class="main-button">Report</button>
+          <button class="main-button">Current Location</button>
         </div>
       </div>
+    </div>
+    <!-- 上部控件部分 -->
+    <div class="control">
+      <div class="center">
+        <el-date-picker
+          v-model="value2"
+          type="date"
+          placeholder="Pick a Date"
+          format="yyyy-MM-dd"
+          value-format="timestamp"
+          @change="pickDate"
+        />
+        <div class="btn-date">
+          <div @click="leftDate">
+            <i class="el-icon-arrow-left" />
+          </div>
+          <div @click="rightDate">
+            <i class="el-icon-arrow-right" />
+          </div>
+        </div>
+
+      </div>
+      <!-- <div class="center">
+          <el-date-picker
+            v-model="value2"
+            type="date"
+            placeholder="Pick a Date"
+            format="yyyy-MM-dd"
+            value-format="timestamp"
+            @change="pickDate"
+          />
+          <div class="btn-date">
+            <div @click="leftDate">
+              <i class="el-icon-arrow-left" />
+            </div>
+            <div @click="rightDate">
+              <i class="el-icon-arrow-right" />
+            </div>
+          </div>
+        </div> -->
     </div>
     <!-- 进度条 -->
     <div class="progress">
@@ -82,9 +105,7 @@
         </el-table-column>
         <el-table-column prop="name" label="Status" width="180">
           <template slot-scope="scope">
-            <div class="capsule" :style="{ background: scope.row.color }">
-              {{ scope.row.column1 }}
-            </div>
+            <StatusCapsule :status="scope.row.status" />
           </template>
         </el-table-column>
         <el-table-column prop="Duration" label="START(EST)">
@@ -145,12 +166,14 @@
 import { getLogbookList, getCurrentStatus, changeStatus, getSettings } from '@/api/device'
 import * as echarts from 'echarts'
 import scaleLine from '@/components/scale-line/scale-line.vue'
+import StatusCapsule from '@/components/StatusCapsule/index.vue'
 // moment
 import moment from '@/utils/moment'
 export default {
   name: 'PieChart',
   components: {
-    scaleLine
+    scaleLine,
+    StatusCapsule
   },
   data() {
     return {
@@ -304,35 +327,28 @@ export default {
       chart.setOption(option)
     },
     getLogbook() {
-      const vm = this
       getLogbookList({
         start: this.value2 / 1000,
-        end: ((this.value2 + 86399999) / 1000).toFixed(0)
+        end: Math.floor((this.value2 + 86399999) / 1000)
       }).then(response => {
-        // this.tableData=response.data.records;
         const accept = JSON.parse(JSON.stringify(response.data.records))
-        const filteredArray = accept.filter(i => i.type == 1 && i.duration > 0)
-        console.log(filteredArray, 1111333333333333333, 'tableData111')
+        const filteredArray = accept.filter(i => i.type === 1 && i.duration > 0)
+        console.log(filteredArray, 'tableData111')
 
-        filteredArray.forEach(e => {
-          this.tableData.push({
-            color: e.status == 2 ? '#00e676' : e.status == 4 ? '#bbbbbb' : e.status == 3
-              ? '#ff9800' : e.status == 1 ? '#00AEEF' : '',
-            column1: e.status == 4 ? 'OFF' : e.status == 1 ? 'ON' : e.status == 2 ? 'DR' : e
-              .status == 3 ? 'SB' : '',
-            column2: e.start ? moment(e.start).format('HH:mm:ss') : '00:00:00',
-            icon1: e.status,
-            lat: e.lat,
-            lng: e.lng,
-            documents: e.documents,
-            notes: e.notes,
-            trailers: e.trailers,
-            odometer: e.odometer,
-            duration: e.duration
+        this.tableData = filteredArray.map(e => ({
+          status: e.status, // 直接传递状态值
+          column2: e.start ? moment(e.start).format('HH:mm:ss') : '00:00:00',
+          icon1: e.status,
+          lat: e.lat,
+          lng: e.lng,
+          documents: e.documents,
+          notes: e.notes,
+          trailers: e.trailers,
+          odometer: e.odometer,
+          duration: e.duration
+        }))
 
-          })
-        })
-        console.log(this.tableData, 1111333333333333333)
+        console.log(this.tableData)
       })
     },
     showTooltip(val) {
@@ -426,10 +442,7 @@ export default {
 
 .item {
   width: 30%;
-  height: 100px;
-}
-
-.left {
+  height: 3vh;
 }
 
 .center {
@@ -454,13 +467,44 @@ export default {
   width: 100px;
   height: 100px;
 }
+.name-container {
+  display: flex;
+  align-items: center;
+}
+.name {
+  font-family: "Inter";
+  font-weight: 600;
+  letter-spacing: .01em;
+  font-size: 16px;
+  line-height: 19px;
+  text-transform: capitalize;
+  color: var(--txt-color);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  position: relative;
+  padding-left: 32px; /* 为圆球留出空间 */
+  margin-right: 10px;
+}
+
+.name::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; /* 与字体大小相同 */
+  height: 16px; /* 与字体大小相同 */
+  background-color: #808080; /* 灰色 */
+  border-radius: 50%; /* 使其成为圆形 */
+}
 
 .chart-title {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 14px;
+  font-size: 22px;
   font-weight: bold;
   color: #333;
   z-index: 1000;
@@ -478,7 +522,7 @@ export default {
 }
 .flex-center1 {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-around;
   align-items: center;
 
 }
@@ -496,6 +540,34 @@ export default {
 
 .btn:hover {
   color: black;
+}
+.main-button {
+    display: flex;
+    flex:1;
+    align-items: center;
+    justify-content: center;
+    background: #f3f3f3;
+    box-sizing: border-box;
+    border-radius: 3px;
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 550;
+    font-size: 12px;
+    line-height: 113.3% !important;
+    text-align: center;
+    letter-spacing: .01em !important;
+    padding: 8px 10px !important;
+    margin: 0 10px;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer; /* 添加鼠标指针样式 */
+    border: none; /* 移除边框 */
+    color: #333; /* 设置文字颜色 */
+    transition: background-color 0.3s ease; /* 添加过渡效果 */
+}
+
+.main-button:hover {
+    background-color: #e0e0e0; /* 添加悬停效果 */
 }
 
 .btn-date {
@@ -538,7 +610,7 @@ export default {
   justify-content: center;
   font-size: 14px;
   color: white;
-  border-radius: 10px;
+  border-radius: 4px;
   font-weight: bold;
 }
 
