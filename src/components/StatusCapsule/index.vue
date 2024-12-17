@@ -38,6 +38,7 @@ export default {
 
 <style scoped>
 .capsule {
+  margin: 0 auto;
   width: 50px;
   height: 25px;
   display: flex;

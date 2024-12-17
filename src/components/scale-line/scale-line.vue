@@ -1,75 +1,77 @@
 <template>
-  <div class="timeline-container">
-    <div class="time-axis">
-      <label style="text-align: center;margin-left: 10px;">
-        <!-- 横线 -->
-        <div class="axis-line" :style="{ width: axisWidth }" />
+  <div ref="wrapper" class="timeline-wrapper">
+    <div class="timeline-container">
+      <div class="time-axis" :style="{ transform: `scale(${scale})`, transformOrigin: 'top left' }">
+        <label style="text-align: center;margin-left: 10px;">
+          <!-- 横线 -->
+          <div class="axis-line" :style="{ width: axisWidth }" />
 
-        <!-- 刻度线 -->
-        <div class="ticks" :style="{ width: axisWidth }">
-          <div
-            v-for="line in allTicks"
-            :key="line.key"
-            class="tick"
-            :style="{
-              left: line.position + 'px',
-              height: line.height + 'px',
-              backgroundColor: itemline == line.val ? '#00e676' : '#bbbbbb'
-            }"
-          >
-            <div v-if="itemline == line.val" class="piece">
-              <div class="triangle" />
-              <div class="txt">14</div>
+          <!-- 刻度线 -->
+          <div class="ticks" :style="{ width: axisWidth }">
+            <div
+              v-for="line in allTicks"
+              :key="line.key"
+              class="tick"
+              :style="{
+                left: line.position + 'px',
+                height: line.height + 'px',
+                backgroundColor: itemline == line.val ? '#00e676' : '#bbbbbb'
+              }"
+            >
+              <div v-if="itemline == line.val" class="piece">
+                <div class="triangle" />
+                <div class="txt">14</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 小时数字 -->
-        <div class="time-ticks" :style="{ width: axisWidth }">
-          <div
-            v-for="hour in paddedHours"
-            :key="hour.index"
-            class="tick-label"
-            :style="{
-              left: hour.index == 0 ? '-23px' :
-                (hour.index * hourWidth + leftPadding - hourWidth / 2) + 'px',
-              width: hourWidth + 'px'
-            }"
-          >
-            {{ hour.label }}
+          <!-- 小时数字 -->
+          <div class="time-ticks" :style="{ width: axisWidth }">
+            <div
+              v-for="hour in paddedHours"
+              :key="hour.index"
+              class="tick-label"
+              :style="{
+                left: hour.index == 0 ? '-23px' :
+                  (hour.index * hourWidth + leftPadding - hourWidth / 2) + 'px',
+                width: hourWidth + 'px'
+              }"
+            >
+              {{ hour.label }}
+            </div>
           </div>
-        </div>
 
-        <!-- 色块表示状态 -->
+          <!-- 色块表示状态 -->
+          <div
+            v-for="(item, i) in processedTimeData"
+            :key="i"
+            :class="['time-block', getStatusClass(item, i)]"
+            :style="{
+              width: item.width,
+              left: item.left
+            }"
+            @click="toolTipbox(item)"
+          >
+            {{ statusLabel(item) }}
+          </div>
+        </label>
+      </div>
+
+      <!-- text label -->
+      <div class="text-label">
         <div
-          v-for="(item, i) in processedTimeData"
+          v-for="(item, i) in labels"
           :key="i"
-          :class="['time-block', getStatusClass(item, i)]"
+          class="label-item"
           :style="{
-            width: item.width,
-            left: item.left
+            color: i == 0 ? '#00e676' :
+              i == 1 ? '#bbbbbb' :
+              i == 2 ? '#ff9800' :
+              i == 3 ? '#00AEEF' : ''
           }"
-          @click="toolTipbox(item)"
         >
-          {{ statusLabel(item) }}
+          {{ item }}
         </div>
-      </label>
-    </div>
-
-    <!-- text label -->
-    <div class="text-label">
-      <div
-        v-for="(item, i) in labels"
-        :key="i"
-        class="label-item"
-        :style="{
-          color: i == 0 ? '#00e676' :
-            i == 1 ? '#bbbbbb' :
-            i == 2 ? '#ff9800' :
-            i == 3 ? '#00AEEF' : ''
-        }"
-      >
-        {{ item }}
       </div>
     </div>
   </div>
@@ -82,8 +84,7 @@ export default {
   props: {
     labels: {
       type: Object,
-      required: true,
-      default: {}
+      required: true
     },
     timeData: {
       type: Array,
@@ -109,7 +110,9 @@ export default {
       totalMinutes: 1440,
       hours: Array.from({ length: 25 }, (_, i) => i),
       itemline: -1, // 改为-1，这样在没有数据时不会匹配任何时间点
-      sum: 0
+      sum: 0,
+      scale: 1,
+      baseWidth: 1200 // 假设这是组件的基准宽度
     }
   },
   computed: {
@@ -123,7 +126,7 @@ export default {
         ticks.push({
           val: hour * 60,
           position: hour * this.hourWidth,
-          height: this.itemline == (hour * 60) ? 40 : 26,
+          height: this.itemline === (hour * 60) ? 40 : 26,
           key: `hour-${hour}`
         })
 
@@ -132,7 +135,7 @@ export default {
           ticks.push({
             val: hour * 60 + minute,
             position: hour * this.hourWidth + (quarter * this.hourWidth) / 6,
-            height: quarter == 3 ? 18 : (this.itemline == (hour * 60 + minute) ? 75 : 10),
+            height: quarter === 3 ? 18 : (this.itemline === (hour * 60 + minute) ? 75 : 10),
             key: `quarter-${hour}-${minute}`
           })
 
@@ -143,7 +146,7 @@ export default {
               ticks.push({
                 val: hour * 60 + smallMinute,
                 position: smallPosition,
-                height: this.itemline == (hour * 60 + smallMinute) ? 75 : 0,
+                height: this.itemline === (hour * 60 + smallMinute) ? 75 : 0,
                 key: `small-${hour}-${smallMinute}`
               })
             }
@@ -155,7 +158,7 @@ export default {
                 ticks.push({
                   val: hour * 60 + smallMinute,
                   position: smallPosition,
-                  height: this.itemline == (hour * 60 + smallMinute) ? 75 : 0,
+                  height: this.itemline === (hour * 60 + smallMinute) ? 75 : 0,
                   key: `small-${hour}-${smallMinute}-end`
                 })
               }
@@ -216,6 +219,12 @@ export default {
     }
   },
   mounted() {
+    this.handleResize()
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize)
   },
 
   methods: {
@@ -253,15 +262,28 @@ export default {
         case 4: return `OFF ${secTxt}`
         default: return ''
       }
+    },
+    handleResize() {
+      const wrapperWidth = this.$refs.wrapper.clientWidth
+      const maxScale = 1.0 // 设置最小缩放比例
+      console.log(wrapperWidth / this.baseWidth)
+
+      this.scale = Math.min(maxScale, wrapperWidth / this.baseWidth)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.timeline-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
 .timeline-container {
   position: relative;
   width: 100%;
+  // width: 1980px; // 设置为基准宽度
 }
 
 .time-axis {

@@ -9,39 +9,6 @@
           </div>
           <StatusCapsule :status="1" />
         </div>
-
-      </div>
-      <div class="item">
-        <div class="device">
-          <div class="chart-container">
-            <div ref="chart1" class="chart" />
-            <div class="chart-title">
-              <span style="color:#f2994a;">{{ showTime(1) }}</span>
-              <small>BREAK</small>
-            </div>
-          </div>
-          <div class="chart-container">
-            <div ref="chart2" class="chart" />
-            <div class="chart-title">
-              <span style="color: #2eb065;">{{ showTime(2) }}</span>
-              <span>DRIVE</span>
-            </div>
-          </div>
-          <div class="chart-container">
-            <div ref="chart3" class="chart" />
-            <div class="chart-title">
-              <span style="color: #2989c0;">{{ showTime(3) }}</span>
-              <span>SHIFT</span>
-            </div>
-          </div>
-          <div class="chart-container">
-            <div ref="chart4" class="chart" />
-            <div class="chart-title">
-              <span style="color: #eb5757;">{{ showTime(4) }}</span>
-              <span>CYCLE</span>
-            </div>
-          </div>
-        </div>
       </div>
       <div class="item">
         <div class="flex-center1">
@@ -52,27 +19,9 @@
       </div>
     </div>
     <!-- 上部控件部分 -->
-    <div class="control">
-      <div class="center">
-        <el-date-picker
-          v-model="value2"
-          type="date"
-          placeholder="Pick a Date"
-          format="yyyy-MM-dd"
-          value-format="timestamp"
-          @change="pickDate"
-        />
-        <div class="btn-date">
-          <div @click="leftDate">
-            <i class="el-icon-arrow-left" />
-          </div>
-          <div @click="rightDate">
-            <i class="el-icon-arrow-right" />
-          </div>
-        </div>
-
-      </div>
-      <!-- <div class="center">
+    <div class="control-wrapper">
+      <div class="control-section">
+        <div class="date-picker-container">
           <el-date-picker
             v-model="value2"
             type="date"
@@ -89,46 +38,89 @@
               <i class="el-icon-arrow-right" />
             </div>
           </div>
-        </div> -->
+        </div>
+        <div class="device-container">
+          <div class="device">
+            <div class="chart-container">
+              <div ref="chart1" class="chart" />
+              <div class="chart-title">
+                <span style="color:#f2994a;">{{ showTime(1) }}</span>
+                <span class="chart-title-small">BREAK</span>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div ref="chart2" class="chart" />
+              <div class="chart-title">
+                <span style="color: #2eb065;">{{ showTime(2) }}</span>
+                <span class="chart-title-small">DRIVE</span>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div ref="chart3" class="chart" />
+              <div class="chart-title">
+                <span style="color: #2989c0;">{{ showTime(3) }}</span>
+                <span class="chart-title-small">SHIFT</span>
+              </div>
+            </div>
+            <div class="chart-container">
+              <div ref="chart4" class="chart" />
+              <div class="chart-title">
+                <span style="color: #eb5757;">{{ showTime(4) }}</span>
+                <span class="chart-title-small">CYCLE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 占位div -->
+        <div class="placeholder" />
+      </div>
     </div>
     <!-- 进度条 -->
     <div class="progress">
-      <scaleLine :labels="labelData" :time-data="timeData" :is-debug="isDebug" @toolClick="showTooltip" />
+      <ScaleLine :labels="labelData" :time-data="timeData" :is-debug="isDebug" @toolClick="showTooltip" />
     </div>
     <!-- table -->
     <div>
-      <el-table :data="tableData" style="width: 100%">
-        <el-table-column prop="NO" label="NO" width="180">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        :stripe="true"
+        :cell-style="cellStyle"
+        :header-cell-style="headerCellStyle"
+      >
+        <el-table-column prop="NO" label="NO" width="60" align="center">
           <template slot-scope="scope">
             {{ scope.$index + 1 }}
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="Status" width="180">
+        <el-table-column prop="name" label="Status" width="169" align="center">
           <template slot-scope="scope">
             <StatusCapsule :status="scope.row.status" />
           </template>
         </el-table-column>
-        <el-table-column prop="Duration" label="START(EST)">
+        <el-table-column prop="Duration" label="START(EST)" width="169" align="center">
           <template slot-scope="scope">
             {{ scope.row.column2 }}
           </template>
         </el-table-column>
-        <el-table-column prop="duration" label="Duration" />
-        <el-table-column prop="Location" label="Location" width="200">
+        <el-table-column prop="duration" label="Duration" width="114" align="center" />
+        <el-table-column prop="Location" label="Location" align="center">
           <template slot-scope="scope">
             <span v-if="scope.row.icon1 == 2" class="iconfont icon-playback" />
             <span v-else class="iconfont icon-addr" />
             {{ scope.row.lng }},{{ scope.row.lat }}
           </template>
         </el-table-column>
-        <el-table-column prop="vehicle" label="Vehicle" />
-        <el-table-column prop="odometer" label="Odometer" />
-        <el-table-column prop="" label="Eng. hours" />
-        <el-table-column prop="notes" label="Notes" />
-        <el-table-column prop="documents" label="Document" />
-        <el-table-column prop="trailers" label="Trailer" />
-        <el-table-column label="Action">
-          <span class="iconfont icon-edit" />
+        <el-table-column prop="vehicle" label="Vehicle" width="80" align="center" />
+        <el-table-column prop="odometer" label="Odometer" width="120" align="center" />
+        <el-table-column prop="" label="Eng. hours" width="120" align="center" />
+        <el-table-column prop="notes" label="Notes" width="120" align="center" />
+        <el-table-column prop="documents" label="Document" width="120" align="center" />
+        <el-table-column prop="trailers" label="Trailer" width="110" align="center" />
+        <el-table-column label="Action" width="80" align="center">
+          <template slot-scope="scope">
+            <span class="iconfont icon-edit" />
+          </template>
         </el-table-column>
       </el-table>
     </div>
@@ -163,16 +155,16 @@
 </template>
 
 <script>
-import { getLogbookList, getCurrentStatus, changeStatus, getSettings } from '@/api/device'
+import { getLogbookList, getCurrentStatus } from '@/api/device'
 import * as echarts from 'echarts'
-import scaleLine from '@/components/scale-line/scale-line.vue'
+import ScaleLine from '@/components/scale-line/scale-line.vue'
 import StatusCapsule from '@/components/StatusCapsule/index.vue'
 // moment
 import moment from '@/utils/moment'
 export default {
   name: 'PieChart',
   components: {
-    scaleLine,
+    ScaleLine,
     StatusCapsule
   },
   data() {
@@ -222,6 +214,23 @@ export default {
     }, 1000)
   },
   methods: {
+    cellStyle() {
+      return {
+        fontFamily: '"Inter", sans-serif',
+        fontWeight: 600,
+        letterSpacing: '0.01em',
+        textAlign: 'center'
+      }
+    },
+    headerCellStyle() {
+      return {
+        fontFamily: '"Inter", sans-serif',
+        fontWeight: 600,
+        letterSpacing: '0.01em',
+        textAlign: 'center',
+        backgroundColor: '#f5f7fa'
+      }
+    },
     handleClose() {
       this.dialogVisible = false
     },
@@ -347,8 +356,6 @@ export default {
           odometer: e.odometer,
           duration: e.duration
         }))
-
-        console.log(this.tableData)
       })
     },
     showTooltip(val) {
@@ -450,22 +457,93 @@ export default {
 
   display: flex;
 }
+.control-wrapper {
+  min-height: 100px;
+  margin-top: 20px;
+}
 
-.device {
+.control-section {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.date-picker-container,
+.device-container,
+.placeholder {
+  width: 30%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.date-picker-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.device-container {
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
 
+.device {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
 .chart-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 5px;
   position: relative;
-  width: 100px;
-  height: 100px;
+}
+
+.placeholder {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 1200px) {
+  .placeholder {
+    width: 20%;
+  }
+  .date-picker-container,
+  .device-container {
+    width: 35%;
+  }
+}
+
+@media (max-width: 768px) {
+  .control-section {
+    flex-direction: column;
+  }
+  .date-picker-container,
+  .device-container,
+  .placeholder {
+    width: 100%;
+  }
+  .placeholder {
+    display: none;
+  }
 }
 
 .chart {
   width: 100px;
   height: 100px;
+}
+
+.chart-title-small {
+  font-family: "Inter";
+  font-size: 0.8vw;
+  font-weight: 600;
+  line-height: 1.2vw;
 }
 .name-container {
   display: flex;
